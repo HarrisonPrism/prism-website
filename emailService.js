@@ -1,14 +1,8 @@
 require('dotenv').config();
 const sgMail = require('@sendgrid/mail');
 
-// Read API key directly from .env file
-const fs = require('fs');
-const envContent = fs.readFileSync('.env', 'utf8');
-const apiKeyMatch = envContent.match(/SENDGRID_API_KEY=(.*)/);
-const apiKey = apiKeyMatch ? apiKeyMatch[1].trim() : process.env.SENDGRID_API_KEY;
-
-console.log('Initializing SendGrid with API key:', apiKey ? 'Set' : 'Not set');
-sgMail.setApiKey(apiKey);
+// Just use the environment variable directly
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 const SENDER_CONFIG = {
     email: 'no-reply@prisminteractive.ai',
