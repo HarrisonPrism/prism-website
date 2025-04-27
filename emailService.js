@@ -46,7 +46,7 @@ async function sendWelcomeEmail(userEmail, userName) {
     `;
     const html = `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <h2 style="color: #b22222;">Welcome to Prism Interactive!</h2>
+            <h2 style="color: #548C87;">Welcome to Prism Interactive!</h2>
             <p>Hi ${userName},</p>
             <p>Thank you for your interest in Prism Interactive! We've received your early access request and we're excited to have you on board.</p>
             <p>We're currently reviewing applications and will get back to you soon with next steps.</p>
@@ -70,7 +70,7 @@ async function sendAdminNotification(formData) {
     `;
     const html = `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <h2 style="color: #b22222;">New Early Access Request</h2>
+            <h2 style="color: #548C87;">New Early Access Request</h2>
             <p><strong>Name:</strong> ${formData.name}</p>
             <p><strong>Email:</strong> ${formData.email}</p>
             <p><strong>Company:</strong> ${formData.company}</p>
@@ -79,20 +79,57 @@ async function sendAdminNotification(formData) {
         </div>
     `;
 
-    return await sendEmail('harrison@prisminteractive.ai', subject, text, html);
+    return await sendEmail(process.env.ADMIN_EMAIL, subject, text, html);
 }
 
-async function sendSubscriptionNotification(email) {
-    const subject = 'New Prism Subscription';
-    const text = `New user subscription: ${email}`;
-    const html = `
+async function sendSubscriptionNotification(email, firstName = '', plan = 'Pro', billingPeriod = 'monthly') {
+    // Send confirmation to the customer
+    const customerSubject = 'Welcome to Prism Interactive Pro!';
+    const customerText = `
+        Hi ${firstName},
+        
+        Thank you for subscribing to Prism Interactive ${plan}! Your ${billingPeriod} subscription has been successfully processed.
+        
+        You'll receive an email with your account details shortly. In the meantime, feel free to explore our platform.
+        
+        If you have any questions, please don't hesitate to contact our support team.
+        
+        Best regards,
+        The Prism Interactive Team
+    `;
+    const customerHtml = `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <h2 style="color: #b22222;">New Newsletter Subscription</h2>
-            <p><strong>Email:</strong> ${email}</p>
+            <h2 style="color: #548C87;">Welcome to Prism Interactive ${plan}!</h2>
+            <p>Hi ${firstName},</p>
+            <p>Thank you for subscribing to Prism Interactive ${plan}! Your ${billingPeriod} subscription has been successfully processed.</p>
+            <p>You'll receive an email with your account details shortly. In the meantime, feel free to explore our platform.</p>
+            <p>If you have any questions, please don't hesitate to contact our support team.</p>
+            <br>
+            <p>Best regards,<br>The Prism Interactive Team</p>
         </div>
     `;
 
-    return await sendEmail('harrison@prisminteractive.ai', subject, text, html);
+    const customerResult = await sendEmail(email, customerSubject, customerText, customerHtml);
+    
+    // Send notification to the admin
+    const adminSubject = 'New Prism Subscription';
+    const adminText = `
+        New ${plan} subscription (${billingPeriod}):
+        Email: ${email}
+        Name: ${firstName}
+    `;
+    const adminHtml = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #548C87;">New ${plan} Subscription</h2>
+            <p><strong>Email:</strong> ${email}</p>
+            <p><strong>Name:</strong> ${firstName}</p>
+            <p><strong>Plan:</strong> ${plan} (${billingPeriod})</p>
+        </div>
+    `;
+
+    const adminResult = await sendEmail(process.env.ADMIN_EMAIL, adminSubject, adminText, adminHtml);
+    
+    return { success: customerResult.success || adminResult.success };
 }
 
 module.exports = { 
